@@ -12,18 +12,18 @@ const INDENT_LEVEL = 1
 
 
 
-class Printer {
-    constructor(printMode){
-        this.printMode = printMode? printMode: Printer.PrintMode.ToConsole
-        if (printMode == Printer.PrintMode.ToFile){
-            this.string = ""
-        } else if (printMode == Printer.PrintMode.ToConsole) { 
+class Writer {
+    constructor(writeMode){
+        this.writeMode = writeMode? writeMode: Writer.writeMode.ToConsole
+        if (writeMode == Writer.writeMode.ToFile){
+            this.message = ""
+        } else if (writeMode == Writer.writeMode.ToConsole) { 
         } else {
-            throw "Printer mode cannot be set to values other than 1 or 2"
+            throw "Writer mode cannot be set to values other than 1 or 2"
         }
     }
 
-    static get PrintMode(){
+    static get writeMode(){
         return {
             ToFile: 1,
             ToConsole: 2
@@ -31,23 +31,24 @@ class Printer {
     }
 
     print(str){
-        if (this.printMode == Printer.PrintMode.ToFile){
-            this.string += str + "\n"
-        } else if (this.printMode == Printer.PrintMode.ToConsole){
+        if (this.writeMode == Writer.writeMode.ToFile){
+            this.message += str + "\n"
+        } else if (this.writeMode == Writer.writeMode.ToConsole){
             console.log(str)
         }
     }
     
     flush(path){
-        if (this.printMode == Printer.PrintMode.ToFile){
-            fs.writeFileSync(path, this.string, (err) => {
+        if (this.writeMode == Writer.writeMode.ToFile){
+            fs.writeFileSync(path, this.message, (err) => {
                 console.err(err)
             })
             console.log("File written to " + path)
         } else {
-            throw "Printer not in file mode"
+            throw "Writer not in file mode"
         }
     }
+
 }
 
 function getHttp(url){
@@ -109,7 +110,7 @@ class Level1Manager{
     }
 
     print(indent = 0){
-        printer.print(INDENT_SYMBOL.repeat(indent) + "Region: " + this.district)
+        writer.print(INDENT_SYMBOL.repeat(indent) + "Region: " + this.district)
         for (var i = 0; i<this.children.length; i++){
             this.children[i].print(indent + INDENT_LEVEL)
         }
@@ -148,7 +149,7 @@ class Level2Manager {
 
             // next page button
             var $nextBtn = $("td[align=right] a").last()
-            if ($nextBtn.html() == null || !$nextBtn.html().includes("下一頁")){
+            if ($nextBtn.html() == null || !$nextBtn.html().includes("???")){
                 toLoop = false
             } else {
                 let paramsText = $nextBtn.attr("href")
@@ -185,7 +186,7 @@ class Level2Manager {
     }
 
     print(indent = 0){
-        printer.print(INDENT_SYMBOL.repeat(indent) + "District: " + this.regionName)
+        writer.print(INDENT_SYMBOL.repeat(indent) + "District: " + this.regionName)
         for (var i = 0; i<this.children.length; i++){
             this.children[i].print(indent + INDENT_LEVEL)
         }
@@ -208,16 +209,16 @@ class Level3Manager {
     }
     
     print(indent = 0){
-        printer.print(INDENT_SYMBOL.repeat(indent) + "Property: " + this.estateName)
-        printer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Address: " + this.addr)
-        printer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Building Age: " + this.bldAge)
-        printer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Recent price per ft: " + this.usablePrice)
+        writer.print(INDENT_SYMBOL.repeat(indent) + "Property: " + this.estateName)
+        writer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Address: " + this.addr)
+        writer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Building Age: " + this.bldAge)
+        writer.print(INDENT_SYMBOL.repeat(indent + INDENT_LEVEL) + "Recent price per ft: " + this.usablePrice)
     }
 }
 
 var managers = []
 var queue = []
-var printer = new Printer(Printer.PrintMode.ToFile)
+var writer = new Writer(Writer.writeMode.ToFile)
 
 for (var i = 0; i< districts.length; i++){
     let manager = new Level1Manager(districts[i])
@@ -231,5 +232,5 @@ Promise.all(queue).then((values) => {
         manager.print(0)
     }
 
-    printer.flush("./property-list.txt")
+    writer.flush("./property-list.txt")
 })
